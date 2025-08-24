@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment - RTA Multi-Modal Journey</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 15px;
+            padding: 2rem;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+        }
+        
+        .header {
+            margin-bottom: 2rem;
+        }
+        
+        .header h1 {
+            color: #333;
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .payment-summary {
+            background: #f8f9ff;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 2rem 0;
+            border-left: 4px solid #667eea;
+        }
+        
+        .journey-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 1rem;
+        }
+        
+        .transport-breakdown {
+            margin-bottom: 1.5rem;
+        }
+        
+        .transport-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .transport-item:last-child {
+            border-bottom: none;
+        }
+        
+        .transport-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .transport-icon {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+        
+        .taxi-icon { background: #ffd700; color: #333; }
+        .metro-icon { background: #dc3545; color: white; }
+        .bus-icon { background: #28a745; color: white; }
+        
+        .fare-amount {
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        .total-section {
+            background: white;
+            border: 2px solid #667eea;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 1rem 0;
+        }
+        
+        .total-amount {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 0.5rem;
+        }
+        
+        .payment-methods {
+            margin: 2rem 0;
+        }
+        
+        .payment-method {
+            background: #f8f9fa;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 10px 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .payment-method:hover {
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+        
+        .payment-method.selected {
+            border-color: #667eea;
+            background: #f8f9ff;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.2);
+        }
+        
+        .payment-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+        
+        .credit-card { background: #4285f4; color: white; }
+        .digital-wallet { background: #34a853; color: white; }
+        .bank-transfer { background: #ea4335; color: white; }
+        
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            width: 100%;
+            margin-top: 1rem;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+        
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .loading {
+            display: none;
+            margin: 2rem 0;
+        }
+        
+        .loading .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .security-note {
+            background: #e7f3ff;
+            color: #004085;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 14px;
+            margin-top: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>💳 Journey Payment</h1>
+            <p>Complete payment for your multi-modal journey</p>
+        </div>
+        
+        <div class="payment-summary">
+            <div class="journey-title">{{ journey_info.get('title', 'Multi-Modal Journey') }}</div>
+            
+            <div class="transport-breakdown">
+                {% for step in journey_info.journey_steps %}
+                    {% if step.fare_aed > 0 %}
+                    <div class="transport-item">
+                        <div class="transport-info">
+                            {% if step.mode == 'taxi' %}
+                                <div class="transport-icon taxi-icon">🚗</div>
+                                <div>
+                                    <div>Taxi</div>
+                                    <small>{{ step.distance_km }} km</small>
+                                </div>
+                            {% elif step.mode == 'metro' %}
+                                <div class="transport-icon metro-icon">🚇</div>
+                                <div>
+                                    <div>Metro {{ step.line_number or '' }}</div>
+                                    <small>{{ step.distance_km }} km</small>
+                                </div>
+                            {% elif step.mode == 'bus' %}
+                                <div class="transport-icon bus-icon">🚌</div>
+                                <div>
+                                    <div>Bus {{ step.line_number or '' }}</div>
+                                    <small>{{ step.distance_km }} km</small>
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="fare-amount">{{ step.fare_aed }} AED</div>
+                    </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+            
+            <div class="total-section">
+                <div>Total Journey Fare</div>
+                <div class="total-amount">{{ journey_info.total_fare }} AED</div>
+            </div>
+        </div>
+        
+        <div class="payment-methods">
+            <h3 style="margin-bottom: 1rem; color: #333;">Select Payment Method</h3>
+            
+            <div class="payment-method" onclick="selectPayment('credit_card')">
+                <div class="payment-icon credit-card">💳</div>
+                <div>
+                    <div style="font-weight: 600;">Credit/Debit Card</div>
+                    <small style="color: #666;">Visa, Mastercard, Emirates NBD</small>
+                </div>
+            </div>
+            
+            <div class="payment-method" onclick="selectPayment('digital_wallet')">
+                <div class="payment-icon digital-wallet">📱</div>
+                <div>
+                    <div style="font-weight: 600;">Digital Wallet</div>
+                    <small style="color: #666;">Apple Pay, Google Pay, Samsung Pay</small>
+                </div>
+            </div>
+            
+            <div class="payment-method" onclick="selectPayment('bank_transfer')">
+                <div class="payment-icon bank-transfer">🏦</div>
+                <div>
+                    <div style="font-weight: 600;">Bank Transfer</div>
+                    <small style="color: #666;">ADCB, FAB, RAKBANK</small>
+                </div>
+            </div>
+        </div>
+        
+        <button id="payBtn" class="btn" disabled onclick="processPayment()">
+            💳 Pay {{ journey_info.total_fare }} AED
+        </button>
+        
+        <div class="loading" id="loadingDiv">
+            <div class="spinner"></div>
+            <p>Processing your payment securely...</p>
+        </div>
+        
+        <div class="security-note">
+            🔒 Your payment is secured with 256-bit SSL encryption
+        </div>
+    </div>
+
+    <script>
+        let selectedPaymentMethod = null;
+
+        function selectPayment(method) {
+            // Remove previous selection
+            document.querySelectorAll('.payment-method').forEach(el => {
+                el.classList.remove('selected');
+            });
+            
+            // Select new method
+            event.currentTarget.classList.add('selected');
+            selectedPaymentMethod = method;
+            
+            // Enable pay button
+            document.getElementById('payBtn').disabled = false;
+        }
+
+        async function processPayment() {
+            if (!selectedPaymentMethod) {
+                alert('Please select a payment method');
+                return;
+            }
+
+            // Show loading
+            document.getElementById('loadingDiv').style.display = 'block';
+            document.getElementById('payBtn').disabled = true;
+
+            // Simulate payment processing
+            await new Promise(resolve => setTimeout(resolve, 3000));
+
+            try {
+                const response = await fetch('/process_payment', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ 
+                        payment_method: selectedPaymentMethod,
+                        amount: {{ journey_info.total_fare }}
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    // Payment successful, redirect to QR codes
+                    window.location.href = '/generate_qr';
+                } else {
+                    alert('Payment failed: ' + result.error);
+                    document.getElementById('loadingDiv').style.display = 'none';
+                    document.getElementById('payBtn').disabled = false;
+                }
+            } catch (error) {
+                alert('Payment processing error. Please try again.');
+                document.getElementById('loadingDiv').style.display = 'none';
+                document.getElementById('payBtn').disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>

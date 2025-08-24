@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Journey Complete - RTA</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 15px;
+            padding: 3rem 2rem;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+            animation: fadeIn 1s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .success-icon {
+            font-size: 5rem;
+            margin-bottom: 2rem;
+            animation: bounce 2s infinite;
+        }
+        
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-20px); }
+            60% { transform: translateY(-10px); }
+        }
+        
+        .header h1 {
+            color: #28a745;
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .message {
+            color: #666;
+            font-size: 1.2rem;
+            margin-bottom: 3rem;
+            line-height: 1.6;
+        }
+        
+        .journey-summary {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 2rem 0;
+            text-align: left;
+        }
+        
+        .summary-title {
+            color: #333;
+            font-size: 1.3rem;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+        
+        .summary-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .summary-item:last-child {
+            border-bottom: none;
+            font-weight: bold;
+            font-size: 1.1rem;
+            color: #28a745;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            margin: 10px;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(40, 167, 69, 0.3);
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+        }
+        
+        .feedback {
+            background: #e7f3ff;
+            color: #004085;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 2rem 0;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="success-icon">🎉</div>
+        
+        <div class="header">
+            <h1>Journey Completed!</h1>
+        </div>
+        
+        <div class="message">
+            Congratulations! You have successfully completed your multi-modal journey using RTA services.
+        </div>
+        
+        <div class="journey-summary">
+            <div class="summary-title">📊 Journey Summary</div>
+            
+            <!-- Only show transport modes that were actually used -->
+            {% for transport in actual_transport_modes %}
+            <div class="summary-item">
+                {% if transport.mode.lower() == 'taxi' %}
+                    <span>🚗 Taxi</span>
+                {% elif 'metro' in transport.mode.lower() %}
+                    <span>🚇 Metro{% if transport.line_number %} ({{ transport.line_number }}){% endif %}</span>
+                {% elif 'bus' in transport.mode.lower() %}
+                    <span>🚌 Bus{% if transport.line_number %} ({{ transport.line_number }}){% endif %}</span>
+                {% else %}
+                    <span>🚊 {{ transport.mode|title }}</span>
+                {% endif %}
+                <span>Completed</span>
+            </div>
+            {% endfor %}
+            
+            <div class="summary-item">
+                <span>💰 Total Fare</span>
+                <span>AED {{ total_fare }}</span>
+            </div>
+        </div>
+        
+        <div class="feedback">
+            🌟 Thank you for choosing RTA Multi-Modal Transport! 
+            Your payment has been processed successfully.
+        </div>
+        
+        <div style="margin-top: 2rem;">
+            <button class="btn" onclick="startNewJourney()">🚀 Start New Journey</button>
+            <button class="btn btn-secondary" onclick="viewReceipt()">🧾 View Receipt</button>
+        </div>
+    </div>
+
+    <script>
+        function startNewJourney() {
+            window.location.href = '/';
+        }
+
+        function viewReceipt() {
+            // This would normally open a receipt page or download
+            alert('Receipt feature coming soon!');
+        }
+
+        // Add confetti animation
+        function createConfetti() {
+            const colors = ['#ff6b6b', '#4ecdc4', '#45b7d1', '#f9ca24', '#f0932b', '#eb4d4b', '#6c5ce7'];
+            
+            for (let i = 0; i < 50; i++) {
+                const confetti = document.createElement('div');
+                confetti.style.position = 'fixed';
+                confetti.style.left = Math.random() * 100 + 'vw';
+                confetti.style.top = '-10px';
+                confetti.style.width = Math.random() * 10 + 5 + 'px';
+                confetti.style.height = Math.random() * 10 + 5 + 'px';
+                confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                confetti.style.borderRadius = '50%';
+                confetti.style.pointerEvents = 'none';
+                confetti.style.zIndex = '1000';
+                confetti.style.animation = `fall ${Math.random() * 3 + 2}s linear`;
+                
+                document.body.appendChild(confetti);
+                
+                setTimeout(() => {
+                    confetti.remove();
+                }, 5000);
+            }
+        }
+
+        // Add CSS for falling animation
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes fall {
+                0% { transform: translateY(-100vh) rotate(0deg); }
+                100% { transform: translateY(100vh) rotate(360deg); }
+            }
+        `;
+        document.head.appendChild(style);
+
+        // Start confetti on load
+        setTimeout(createConfetti, 500);
+    </script>
+</body>
+</html>

@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exit QR Code - RTA Payment</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 15px;
+            padding: 2rem;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+        }
+        
+        .header {
+            margin-bottom: 2rem;
+        }
+        
+        .header h1 {
+            color: #dc3545;
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .transport-info {
+            background: #fff5f5;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 2rem 0;
+            border-left: 4px solid #dc3545;
+        }
+        
+        .transport-title {
+            font-size: 1.5rem;
+            color: #333;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .exit-instruction {
+            background: #d1ecf1;
+            color: #0c5460;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 1rem 0;
+            font-weight: 600;
+        }
+        
+        .qr-container {
+            background: white;
+            border: 3px solid #dc3545;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 2rem 0;
+            box-shadow: 0 5px 15px rgba(220, 53, 69, 0.2);
+        }
+        
+        .qr-code {
+            width: 250px;
+            height: 250px;
+            margin: 0 auto;
+            background: #f9f9f9;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .qr-code img {
+            max-width: 100%;
+            max-height: 100%;
+        }
+        
+        .scan-instruction {
+            margin-top: 15px;
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .animation-container {
+            display: none;
+            margin: 2rem 0;
+        }
+        
+        .animation-container video {
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #dc3545 0%, #fd7e14 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            margin: 10px;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(220, 53, 69, 0.3);
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+        }
+        
+        .mode-icon {
+            font-size: 2rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚪 Exit QR Code</h1>
+        </div>
+        
+        <div class="exit-instruction">
+            🚨 Scan this QR code when EXITING the {{ transport_info.mode }}
+        </div>
+        
+        <div class="transport-info">
+            <div class="transport-title">
+                {% set mode_icons = {'taxi': '🚗', 'metro': '🚇', 'bus': '🚌', 'transfer': '🚶', 'walk': '🚶'} %}
+                <span class="mode-icon">{{ mode_icons.get(transport_info.mode, '🚶') }}</span>
+                <span>{{ transport_info.mode.title() }} Exit</span>
+                {% if transport_info.line_number %}
+                    <span>({{ transport_info.line_number }})</span>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="qr-container" id="qrContainer">
+            <div class="qr-code">
+                <img src="data:image/png;base64,{{ qr_code }}" alt="Exit QR Code">
+            </div>
+            <div class="scan-instruction">
+                Scan this QR code when exiting the {{ transport_info.mode }}
+            </div>
+        </div>
+        
+        <div class="animation-container" id="animationContainer">
+            <video id="tickVideo" autoplay muted>
+                <source src="{{ url_for('static', filename='tick_video.mp4') }}" type="video/mp4">
+                Your browser does not support the video tag.
+            </video>
+        </div>
+        
+        <div style="margin-top: 2rem;">
+            <button class="btn" onclick="simulateExitScan()">🚪 Simulate Exit Scan</button>
+            <button class="btn btn-secondary" onclick="goBack()">← Go Back</button>
+        </div>
+    </div>
+
+    <script>
+        function simulateExitScan() {
+            const qrData = {
+                journey_id: '{{ session.journey_id }}',
+                step: {{ current_step - 1 }},  // current_step is 1-based, convert to 0-based for internal use
+                mode: '{{ transport_info.mode }}',
+                action: 'scan',
+                line_number: '{{ transport_info.line_number or "" }}',
+                purpose: 'exit'
+            };
+
+            scanExitQR(JSON.stringify(qrData));
+        }
+
+        async function scanExitQR(qrData) {
+            try {
+                const response = await fetch('/scan_qr', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ qr_data: qrData })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showTickAnimation();
+                    
+                    // Use longer animation duration (8 seconds)
+                    const animationDuration = result.animation_duration || 8000;
+                    
+                    setTimeout(() => {
+                        if (result.next_step) {
+                            // Move to next step
+                            window.location.href = '/generate_qr';
+                        } else {
+                            // Journey complete
+                            showJourneyComplete();
+                        }
+                    }, animationDuration);
+                } else {
+                    alert('Exit QR Scan Error: ' + result.error);
+                }
+            } catch (error) {
+                alert('Network error during exit QR scan');
+                console.error('Error:', error);
+            }
+        }
+
+        function showTickAnimation() {
+            document.getElementById('qrContainer').style.display = 'none';
+            document.getElementById('animationContainer').style.display = 'block';
+            
+            const video = document.getElementById('tickVideo');
+            video.currentTime = 0;
+            video.play();
+            
+            video.onended = function() {
+                document.getElementById('animationContainer').style.display = 'none';
+            };
+        }
+
+        function showJourneyComplete() {
+            document.body.innerHTML = `
+                <div class="container" style="text-align: center;">
+                    <div style="font-size: 4rem; margin-bottom: 2rem;">🎉</div>
+                    <h1 style="color: #28a745; margin-bottom: 1rem;">Journey Completed!</h1>
+                    <p style="font-size: 1.2rem; color: #666; margin-bottom: 2rem;">
+                        Thank you for using RTA Multi-Modal Transport
+                    </p>
+                    <button class="btn" onclick="window.location.href='/'">🏠 Start New Journey</button>
+                </div>
+            `;
+        }
+
+        function goBack() {
+            window.history.back();
+        }
+    </script>
+</body>
+</html>

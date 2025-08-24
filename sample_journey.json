@@ -1,0 +1,15 @@
+{
+  "sample_journey": {
+    "title": "Burj Khalifa/Dubai Mall to The Binary Tower",
+    "description": "Multi-modal journey combining transfer and taxi segments",
+    "journey_text": "=== Detailed Journey ===\n1. transfer (transfer): 2 stops, 1.2 min, 0.10 km\n   Stops: Burj Khalifa/ Dubai Mall Metro Station 1 -> 9074620786\n\n2. taxi (taxi): 32 stops, 4.3 min, 2.87 km\n   Stops: 9074620786 -> 9074620776 -> 9075848789 -> 7590166129 -> 5802374159 -> 927218697 -> 5802374166 -> 1123405166 -> 9074581341 -> 1123405163 -> 5802343789 -> 5802343783 -> 647981987 -> 3852655215 -> 10055770651 -> 8996143719 -> 3852655214 -> 6005299342 -> 2500065406 -> 927226520 -> 6573331370 -> 4773398721 -> 3851764151 -> 4089210695 -> 10033268603 -> 604988657 -> 3851764159 -> 3851764169 -> 3851764173 -> 3852524786 -> 3852524788 -> 1844058872\n\n3. transfer (transfer): 2 stops, 1.5 min, 0.13 km\n   Stops: 1844058872 -> The Binary Tower 2",
+    "calculated_fares": {
+      "total": 23,
+      "breakdown": {
+        "taxi": 23
+      },
+      "calculated_by": "BytePlus AI",
+      "timestamp": "live_calculation"
+    }
+  }
+}
